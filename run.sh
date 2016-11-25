@@ -34,10 +34,10 @@ fi
 cat > /run/openvpn-server.conf <<EOF
 server $(getroute $OVPN_CLIENTS)
 
-ca /etc/openvpn/ca.crt
-cert /etc/openvpn/server.crt
-key /etc/openvpn/server.key
-dh /etc/openvpn/dh.pem
+key ${OVPN_SERVER_KEY:-/etc/openvpn/server.key}
+cert ${OVPN_SERVER_CERT:-/etc/openvpn/server.crt}
+dh ${OVPN_SERVER_DH:-/etc/openvpn/dh.pem}
+ca ${OVPN_CLIENT_CA:-/etc/openvpn/client-ca.crt}
 
 dev tun
 topology subnet
