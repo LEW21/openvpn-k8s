@@ -59,7 +59,11 @@ EOF
 [ -n "$K8S_PODS" ] && echo "push \"route $(getroute $K8S_PODS)\"" >> /run/openvpn-server.conf
 [ -n "$K8S_SERVICES" ] && echo "push \"route $(getroute $K8S_SERVICES)\"" >> /run/openvpn-server.conf
 
-[ -n "$K8S_DNS" ] && echo "push \"dhcp-option DNS $K8S_DNS\"" >> /run/openvpn-server.conf
+if [ -n "$K8S_DNS" ]
+then
+    echo "push \"dhcp-option DNS $K8S_DNS\"" >> /run/openvpn-server.conf
+    echo "push \"dhcp-option DOMAIN cluster.local\"" >> /run/openvpn-server.conf
+fi
 
 iptables -t nat -A POSTROUTING -s $OVPN_CLIENTS -o eth0 -j MASQUERADE
 
