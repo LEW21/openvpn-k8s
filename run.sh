@@ -31,11 +31,11 @@ if [ -z "$OVPN_CLIENTS" ]; then
     exit 1
 fi
 
-AUTH_CLIENT=${AUTH_CLIENT:1}
-if [ -n "$AUTHZ_HTTP" -eq 1 ]; then
-    OVPN_RENEG_SEC=${RENEG_SEC:900}
+: ${AUTH_CLIENT:=1}
+if [ -n "$AUTHZ_HTTP" ]; then
+    : ${OVPN_RENEG_SEC:=900}
 else
-    OVPN_RENEG_SEC=${RENEG_SEC:3600}
+    : ${OVPN_RENEG_SEC:=3600}
 fi
 
 (
@@ -49,7 +49,7 @@ dh ${OVPN_SERVER_DH:-/etc/openvpn/dh.pem}
 reneg-sec $OVPN_RENEG_SEC
 EOF
 
-if [ "$AUTH_CLIENT" -eq 1 ]; then
+if [ "$AUTH_CLIENT" = "1" ]; then
     echo "ca ${AUTH_CLIENT_CA:-/etc/openvpn/client-ca.crt}"
 else
     # OpenVPN does not start without ca, so we need to give it any.
@@ -60,11 +60,10 @@ if [ -n "$AUTHN_PASSWORD_HTTPS" -o -n "$AUTHZ_HTTPS" ]; then
     echo "plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so vpn"
 fi
 
-if [ "$AUTH_CLIENT" -ne 1 ]; then
+if [ "$AUTH_CLIENT" != "1" ]; then
     echo "client-cert-not-required"
     echo "username-as-common-name"
 fi
-EOF
 
 cat <<EOF
 dev tun
@@ -96,12 +95,12 @@ fi
 
 (
     if [ -n "$AUTHN_PASSWORD_HTTPS" ]; then
-        echo "auth requisite pam_exec.so quiet expose_authtok /usr/local/bin/pam-https $AUTHN_PASSWORD_HTTPS --ca {$AUTHN_PASSWORD_HTTPS_CA:/etc/openvpn/https-ca.crt}"
+        echo "auth requisite pam_exec.so quiet expose_authtok /usr/local/bin/pam-https $AUTHN_PASSWORD_HTTPS --ca ${AUTHN_PASSWORD_HTTPS_CA:-/etc/openvpn/https-ca.crt}"
     fi
     echo "auth optional pam_permit.so"
 
     if [ -n "$AUTHZ_HTTPS" ]; then
-        echo "account required pam_exec.so quiet expose_authtok /usr/local/bin/pam-https $AUTHZ_HTTPS --ca {$AUTHZ_HTTPS_CA:/etc/openvpn/https-ca.crt}"
+        echo "account required pam_exec.so quiet expose_authtok /usr/local/bin/pam-https $AUTHZ_HTTPS --ca ${AUTHZ_HTTPS_CA:-/etc/openvpn/https-ca.crt}"
     fi
     echo "account optional pam_permit.so"
 ) > /etc/pam.d/vpn
